@@ -1,0 +1,77 @@
+services:
+
+  db:
+    build:
+      dockerfile: ./db/Dockerfile
+    container_name: ${CLIENTE}_db
+    hostname: ${CLIENTE}_db
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: trust
+    restart: always
+    working_dir: /var/lib/postgresql/data
+    volumes:
+      - db-var-lib-postgresql-data:/var/lib/postgresql/data
+      - db-var-log:/var/log
+    networks:
+      - net0
+
+  mail:
+    image: axllent/mailpit
+    container_name: ${CLIENTE}_mail
+    hostname: ${CLIENTE}_mail
+    environment:
+      MP_MAX_MESSAGES: 500
+      MP_DATABASE: /data/mailpit.db
+      MP_SMTP_AUTH_ACCEPT_ANY: 1
+      MP_SMTP_AUTH_ALLOW_INSECURE: 1
+    restart: always
+    volumes:
+      - mailpit-data:/data
+    networks:
+      - net0
+    ports:
+      - 1025:1025
+      - ${MAIL_PORT}:8025
+
+  redis:
+    image: bitnami/redis
+    container_name: ${CLIENTE}_redis
+    hostname: ${CLIENTE}_redis
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+    restart: always
+    volumes:
+      - redis-data:/bitnami/redis/data
+    networks:
+      - net0
+
+  app:
+    build:
+      dockerfile: ./app/Dockerfile
+    container_name: ${CLIENTE}_app
+    hostname: ${CLIENTE}_app
+    depends_on:
+      - db
+      - redis
+      - mail
+    restart: always
+    working_dir: /var/www
+    volumes:
+      - ./app/root:/var/www/app
+      - app-var-log:/var/log
+    networks:
+      - net0
+    ports:
+      - ${APP_PORT}:80
+
+volumes:
+  db-var-lib-postgresql-data:
+  db-var-log:
+  app-etc-syslogng:
+  app-var-log:
+  mailpit-data:
+  redis-data:
+
+networks:
+  net0:
+    driver: bridge
