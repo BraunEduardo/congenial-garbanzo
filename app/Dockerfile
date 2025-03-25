@@ -50,7 +50,6 @@ RUN /tmp/composer_install.sh
 # Serviços
 RUN apt update && apt install -y\
  supervisor\
- redis-server\
  cron
 
 # Configuração do nginx
