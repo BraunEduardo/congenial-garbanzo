@@ -1,4 +1,4 @@
 .env
 .vscode
 .git/
-app/root/
+app/root
